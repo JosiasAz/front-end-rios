@@ -1,0 +1,53 @@
+@let g = geo();
+<h2>{{ titulo() }}</h2>
+<p class="sub">Linha: mediana do dia · faixa: mínimo a máximo do dia · clique num dia para vê-lo no rio abaixo</p>
+<div class="caixa">
+  <svg
+    [attr.viewBox]="'0 0 ' + g.W + ' ' + g.H"
+    [attr.height]="g.H"
+    tabindex="0"
+    role="img"
+    [attr.aria-label]="titulo() + '. Use as setas para percorrer os dias e Enter para escolher.'"
+    (pointermove)="mover($event)"
+    (pointerleave)="hover.set(null)"
+    (click)="clicar($event)"
+    (focus)="focar()"
+    (blur)="hover.set(null)"
+    (keydown)="tecla($event)"
+  >
+    @for (t of g.gradeY; track t.v) {
+      <line class="grade" [class.base]="t.base" [attr.x1]="g.m.l" [attr.x2]="g.W - g.m.r" [attr.y1]="t.y" [attr.y2]="t.y" />
+      <text class="rotulo-svg" text-anchor="end" [attr.x]="g.m.l - 6" [attr.y]="t.y + 4">{{ t.rotulo }}</text>
+    }
+    @for (t of g.ticksX; track t.x) {
+      <text class="rotulo-svg" text-anchor="middle" [attr.x]="t.x" [attr.y]="g.H - 8">{{ t.rotulo }}</text>
+    }
+
+    <line class="mediana" [attr.x1]="g.m.l" [attr.x2]="g.W - g.m.r" [attr.y1]="g.mediana.y" [attr.y2]="g.mediana.y" />
+    <text class="rotulo-svg halo" text-anchor="end" [attr.x]="g.W - g.m.r" [attr.y]="g.mediana.y - 6">{{ g.mediana.rotulo }}</text>
+
+    @for (f of g.faixas; track $index) {
+      <polygon class="faixa" [attr.points]="f" />
+    }
+    @for (l of g.linhas; track $index) {
+      <polyline class="linha" [attr.points]="l" />
+    }
+
+    @if (g.marca; as s) {
+      <line class="sel" [attr.x1]="s.x" [attr.x2]="s.x" [attr.y1]="g.m.t" [attr.y2]="g.H - g.m.b" />
+      <circle class="sel-ponto" r="5" [attr.cx]="s.x" [attr.cy]="s.y" />
+    }
+    @if (dica(); as d) {
+      <line class="mira" [attr.x1]="d.x" [attr.x2]="d.x" [attr.y1]="g.m.t" [attr.y2]="g.H - g.m.b" />
+      <circle class="ponto" r="4.5" [attr.cx]="d.x" [attr.cy]="d.y" />
+    }
+  </svg>
+
+  @if (dica(); as d) {
+    <div class="dica" [class.esquerda]="d.esquerda" [style.left.px]="d.x" [style.top.px]="d.topo">
+      <strong>{{ d.valor }}</strong>
+      <div>{{ d.data }}</div>
+      <span>{{ d.faixa }}</span>
+    </div>
+  }
+</div>

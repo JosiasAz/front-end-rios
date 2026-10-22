@@ -1,0 +1,26 @@
+:host { display: block; }
+h2 { margin: 0; font-size: 16px; }
+.sub { margin: 2px 0 12px; color: var(--texto-2); font-size: 13px; }
+.caixa { position: relative; }
+svg { display: block; width: 100%; overflow: visible; cursor: crosshair; }
+svg:focus-visible { outline: 2px solid var(--serie); outline-offset: 4px; border-radius: 4px; }
+
+.grade { stroke: var(--grade); stroke-width: 1; }
+.grade.base { stroke: var(--eixo); }
+.mediana { stroke: var(--mudo); stroke-width: 1; stroke-dasharray: 4 4; }
+.faixa { fill: var(--serie); fill-opacity: 0.18; }
+.linha { fill: none; stroke: var(--serie); stroke-width: 2; stroke-linejoin: round; }
+.sel { stroke: var(--selecao); stroke-width: 1.5; }
+.sel-ponto { fill: var(--selecao); stroke: var(--superficie); stroke-width: 2; }
+.mira { stroke: var(--texto-2); stroke-width: 1; pointer-events: none; }
+.ponto { fill: var(--serie); stroke: var(--superficie); stroke-width: 2; pointer-events: none; }
+
+.dica {
+  position: absolute; pointer-events: none; transform: translateX(12px);
+  background: var(--superficie); color: var(--texto);
+  border: 1px solid var(--borda); border-radius: 8px; padding: 8px 10px; font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .12); white-space: nowrap;
+}
+.dica.esquerda { transform: translateX(calc(-100% - 12px)); }
+.dica strong { display: block; font-size: 15px; }
+.dica span { color: var(--texto-2); }

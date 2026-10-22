@@ -1,0 +1,79 @@
+@let c = cena();
+<h2>Se você estivesse na beira do rio</h2>
+<p class="sub">Uma pessoa de 1,70 m em pé na margem, no ponto onde a água chega num dia típico (mediana de todos os registros). Escala real.</p>
+
+<div class="atalhos" role="group" aria-label="Escolher um momento">
+  @for (a of atalhos(); track a.chave) {
+    <button type="button" [attr.aria-pressed]="a.chave === selecao().atalho" (click)="selecionar.emit(a.selecao)">
+      {{ a.rotulo }}
+    </button>
+  }
+</div>
+
+<div class="grade">
+  <svg class="cena" viewBox="0 0 800 460" role="img" [attr.aria-label]="legenda()">
+    <defs>
+      <linearGradient id="g-agua" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" class="agua-topo" />
+        <stop offset="1" class="agua-fundo" />
+      </linearGradient>
+    </defs>
+    <rect class="ceu" x="0" y="0" width="800" height="460" />
+    <polygon class="terra" [attr.points]="c.terra" />
+
+    @for (r of c.refs; track r.rotulo) {
+      <line class="referencia" [attr.x1]="r.x" [attr.x2]="700" [attr.y1]="r.y" [attr.y2]="r.y" />
+      <text class="rotulo-svg halo ref-texto" [attr.x]="r.tx" [attr.y]="r.y - 5" [attr.text-anchor]="r.ancora">{{ r.rotulo }}</text>
+    }
+
+    <g class="pessoa" [attr.transform]="c.pessoa">
+      <circle cx="0" cy="-158" r="12" />
+      @for (p of corpo; track $index) {
+        <rect [attr.x]="p.x" [attr.y]="p.y" [attr.width]="p.w" [attr.height]="p.h" [attr.rx]="p.rx" />
+      }
+    </g>
+
+    <!-- Água por cima e translúcida: a parte submersa da pessoa aparece debaixo d'água. -->
+    <polygon class="agua" [attr.points]="c.agua" />
+    <line class="superficie-agua" [attr.x1]="c.xAgua" x2="800" [attr.y1]="c.yAgua" [attr.y2]="c.yAgua" />
+    <text class="leito" x="794" y="452" text-anchor="end">↓ mais fundo</text>
+
+    <rect class="regua" x="700" [attr.y]="c.reguaTopo" width="10" [attr.height]="470 - c.reguaTopo" />
+    @for (t of c.ticks; track t.c) {
+      <line class="tique" x1="700" [attr.x2]="t.par ? 710 : 705" [attr.y1]="t.y" [attr.y2]="t.y" />
+      @if (t.par) {
+        <text class="rotulo-svg halo" x="696" [attr.y]="t.y + 4" text-anchor="end">{{ t.c }}</text>
+      }
+    }
+    <text class="rotulo-svg" x="705" [attr.y]="c.reguaTopo - 4" text-anchor="middle">régua</text>
+    <text class="halo nivel" x="716" [attr.y]="c.yAgua - 6">{{ c.rotuloAgua }}</text>
+  </svg>
+
+  <div class="painel">
+    @let p = painel();
+    <svg class="corpo" viewBox="0 0 140 230" role="img" [attr.aria-label]="'A pessoa ampliada: ' + p.texto">
+      <rect class="terra" x="0" [attr.y]="pesCorpo" width="140" height="20" />
+      <g class="pessoa" [attr.transform]="'translate(70 ' + pesCorpo + ') scale(' + escalaCorpo + ')'">
+        <circle cx="0" cy="-158" r="12" />
+        @for (q of corpo; track $index) {
+          <rect [attr.x]="q.x" [attr.y]="q.y" [attr.width]="q.w" [attr.height]="q.h" [attr.rx]="q.rx" />
+        }
+      </g>
+      @if (p.topo !== null) {
+        <rect class="agua-corpo" x="0" [attr.y]="p.topo" width="140" [attr.height]="230 - p.topo" />
+        <line class="superficie-agua" x1="0" x2="140" [attr.y1]="p.topo" [attr.y2]="p.topo" />
+      }
+    </svg>
+    <app-selo [pct]="p.pct" />
+    <p class="painel-texto">{{ p.texto }}</p>
+  </div>
+</div>
+
+<div class="deslizador">
+  <input type="range" min="0" [max]="dados().serie.length - 1" [value]="indiceDia() < 0 ? dados().serie.length - 1 : indiceDia()"
+         aria-label="Dia mostrado na cena" (input)="escolherDia($event)" />
+  <output>{{ rotuloDia() }}</output>
+</div>
+
+<p class="legenda" aria-live="polite">{{ legenda() }}</p>
+<p class="nota">A ANA mede a <b>cota</b> numa régua cujo zero é um ponto de referência local: 16 m na régua não quer dizer 16 m de fundo. O leito do rio continua bem abaixo do que aparece aqui. O que a cena mostra é o quanto a água sobe e desce na margem.</p>

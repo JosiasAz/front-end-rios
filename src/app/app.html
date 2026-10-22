@@ -1,0 +1,58 @@
+@let d = dados();
+@let ref = referencia();
+@let sel = selecao();
+<div class="pagina">
+  <header>
+    <h1>{{ d ? d.rio + ' em ' + d.cidade + ' (' + d.uf + ')' : 'Nível dos rios' }}</h1>
+    <p>{{ d ? 'Estação ANA ' + d.codigo_ana + ' · cota da régua, em metros' : 'Dados de telemetria da ANA' }}</p>
+  </header>
+
+  <div class="filtros">
+    <label>
+      Estação
+      <select [value]="estacao()" (change)="mudarEstacao($event)">
+        @for (e of estacoes(); track e.estacao) {
+          <option [value]="e.estacao" [selected]="e.estacao === estacao()">{{ e.cidade }} ({{ e.uf }}) · {{ e.rio }}</option>
+        }
+      </select>
+    </label>
+    <div class="segmento" role="group" aria-label="Período">
+      @for (a of periodos; track a) {
+        <button type="button" [attr.aria-pressed]="a === anos()" (click)="mudarAnos(a)">
+          {{ a }} {{ a === 1 ? 'ano' : 'anos' }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (aviso()) {
+    <div class="aviso" role="status">{{ aviso() }}</div>
+  }
+
+  @if (d && ref && sel) {
+    <main [class.carregando]="carregando()">
+      <app-resumo [dados]="d" [referencia]="ref" />
+
+      <section class="cartao">
+        <app-grafico [dados]="d" [referencia]="ref" [selecao]="sel" [anos]="anos()" (dia)="escolherDia($event)" />
+      </section>
+
+      <section class="cartao">
+        <app-cena [dados]="d" [referencia]="ref" [selecao]="sel" (selecionar)="selecao.set($event)" />
+      </section>
+
+      <details>
+        <summary>Ver os dados em tabela (resumo mensal)</summary>
+        <table>
+          <thead><tr><th>Mês</th><th>Média (m)</th><th>Mínimo (m)</th><th>Máximo (m)</th></tr></thead>
+          <tbody>
+            @for (r of tabela(); track r.mes) {
+              <tr><td>{{ r.mes }}</td><td>{{ r.media }}</td><td>{{ r.min }}</td><td>{{ r.max }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </details>
+      <p class="nota">{{ fonte() }}</p>
+    </main>
+  }
+</div>

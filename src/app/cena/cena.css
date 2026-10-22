@@ -1,0 +1,43 @@
+:host { display: block; }
+h2 { margin: 0; font-size: 16px; }
+.sub { margin: 2px 0 12px; color: var(--texto-2); font-size: 13px; }
+
+.atalhos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.atalhos button {
+  font: inherit; font-size: 13px; cursor: pointer; color: var(--texto); background: var(--superficie);
+  border: 1px solid var(--borda); border-radius: 999px; padding: 5px 12px;
+}
+.atalhos button:hover { border-color: var(--texto-2); }
+.atalhos button[aria-pressed="true"] { border-color: var(--selecao); box-shadow: inset 0 0 0 1px var(--selecao); }
+
+.grade { display: grid; grid-template-columns: 1fr 200px; gap: 16px; align-items: start; }
+.grade > * { min-width: 0; }
+.cena { display: block; width: 100%; height: auto; border-radius: 8px; }
+.painel { text-align: center; }
+.corpo { width: 140px; height: 230px; }
+.painel-texto { font-size: 13px; color: var(--texto-2); margin: 6px 0 0; }
+
+.ceu { fill: var(--superficie); }
+.terra { fill: var(--terra); stroke: var(--terra-borda); stroke-width: 1.5; }
+.referencia { stroke: var(--texto-2); stroke-width: 1; stroke-dasharray: 3 4; opacity: .7; }
+.ref-texto { fill: var(--texto-2); }
+.pessoa { fill: var(--pessoa); }
+.agua-topo { stop-color: var(--agua-topo); stop-opacity: .75; }
+.agua-fundo { stop-color: var(--agua); stop-opacity: .92; }
+.agua { fill: url(#g-agua); }
+.agua-corpo { fill: var(--agua); fill-opacity: .65; }
+.superficie-agua { stroke: var(--agua-topo); stroke-width: 2; }
+.leito { fill: #fff; font-size: 12px; opacity: .9; }
+.regua { fill: var(--superficie); stroke: var(--texto-2); stroke-width: 1; }
+.tique { stroke: var(--texto); stroke-width: 1; }
+.nivel { font-size: 13px; font-weight: 650; fill: var(--texto); }
+
+.deslizador { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
+.deslizador input { flex: 1; min-width: 0; accent-color: var(--selecao); }
+.deslizador output { font-size: 13px; color: var(--texto-2); min-width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
+.legenda { font-size: 15px; margin: 12px 0 0; min-height: 3em; }
+.nota { color: var(--texto-2); font-size: 13px; margin: 10px 0 0; }
+
+@media (max-width: 720px) {
+  .grade { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,81 @@
+:root {
+  color-scheme: light;
+  --pagina: #f9f9f7;
+  --superficie: #fcfcfb;
+  --texto: #0b0b0b;
+  --texto-2: #52514e;
+  --mudo: #898781;
+  --grade: #e1e0d9;
+  --eixo: #c3c2b7;
+  --borda: rgba(11, 11, 11, 0.10);
+  --serie: #2a78d6;
+  --agua: #2a78d6;
+  --agua-topo: #86b6ef;
+  --terra: #d8ccb6;
+  --terra-borda: #b9a988;
+  --pessoa: #2b2a28;
+  --selecao: #eb6834;
+  --bom: #0ca30c;
+  --alerta: #fab219;
+  --critico: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --pagina: #0d0d0d;
+    --superficie: #1a1a19;
+    --texto: #f0efec;
+    --texto-2: #c3c2b7;
+    --grade: #2c2c2a;
+    --eixo: #383835;
+    --borda: rgba(255, 255, 255, 0.10);
+    --serie: #3987e5;
+    --agua: #256abf;
+    --agua-topo: #5598e7;
+    --terra: #4a4234;
+    --terra-borda: #6b5f4a;
+    --pessoa: #f0efec;
+    --selecao: #d95926;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --pagina: #0d0d0d;
+  --superficie: #1a1a19;
+  --texto: #f0efec;
+  --texto-2: #c3c2b7;
+  --grade: #2c2c2a;
+  --eixo: #383835;
+  --borda: rgba(255, 255, 255, 0.10);
+  --serie: #3987e5;
+  --agua: #256abf;
+  --agua-topo: #5598e7;
+  --terra: #4a4234;
+  --terra-borda: #6b5f4a;
+  --pessoa: #f0efec;
+  --selecao: #d95926;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--pagina);
+  color: var(--texto);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 16px;
+  min-width: 0;
+}
+.cartao h2 { margin: 0; font-size: 16px; }
+.cartao .sub { margin: 2px 0 12px; color: var(--texto-2); font-size: 13px; }
+.nota { color: var(--texto-2); font-size: 13px; margin: 10px 0 0; }
+
+/* Texto do SVG: rótulos discretos com halo da cor do fundo para ler sobre linhas e água. */
+.rotulo-svg { font-size: 11px; fill: var(--mudo); font-variant-numeric: tabular-nums; }
+.halo { paint-order: stroke; stroke: var(--superficie); stroke-width: 4px; stroke-linejoin: round; }
