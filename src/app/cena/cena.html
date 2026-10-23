@@ -1,6 +1,5 @@
-@let c = cena();
-<h2>Se você estivesse na beira do rio</h2>
-<p class="sub">Uma pessoa de 1,70 m em pé na margem, no ponto onde a água chega num dia típico (mediana de todos os registros). Escala real.</p>
+<h2>O rio na Ponte Rio Negro</h2>
+<p class="sub">A Ponte Rio Negro, em Manaus, como se vê do rio, com a água no nível escolhido: quanto mais seca, mais os pilares aparecem. A régua no pilar mostra a cota da estação escolhida, e o corte ao lado mostra a profundidade.</p>
 
 <div class="atalhos" role="group" aria-label="Escolher um momento">
   @for (a of atalhos(); track a.chave) {
@@ -10,70 +9,261 @@
   }
 </div>
 
-<div class="grade">
-  <svg class="cena" viewBox="0 0 800 460" role="img" [attr.aria-label]="legenda()">
+@let w = agua();
+@let rg = regua();
+@let ct = corte();
+<div class="palco">
+  <svg class="cena" [attr.viewBox]="'0 0 ' + p.LARGURA + ' ' + p.ALTURA" role="img" [attr.aria-label]="legenda()">
     <defs>
+      <linearGradient id="g-ceu" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" class="ceu-topo" />
+        <stop offset="1" class="ceu-horizonte" />
+      </linearGradient>
       <linearGradient id="g-agua" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" class="agua-topo" />
+        <stop offset="0" class="agua-horizonte" />
+        <stop offset=".18" class="agua-raso" />
         <stop offset="1" class="agua-fundo" />
       </linearGradient>
+      <linearGradient id="g-concreto" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" class="concreto-luz" />
+        <stop offset="1" class="concreto-sombra" />
+      </linearGradient>
+      <linearGradient id="g-reflexo-pilar" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" class="refl-topo" />
+        <stop offset="1" class="refl-fundo" />
+      </linearGradient>
+      <radialGradient id="g-halo-astro">
+        <stop offset="0" class="halo-astro-centro" />
+        <stop offset="1" class="halo-astro-borda" />
+      </radialGradient>
+      <!-- Reflexos quebrados pelas ondas: faixas horizontais que tremem. -->
+      <filter id="f-reflexo" x="-40%" y="0" width="180%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.018 0.3" numOctaves="2" seed="7" result="ruido">
+        </feTurbulence>
+        <feColorMatrix in="ruido" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 3 -1.05" result="mascara" />
+        <feComposite in="SourceGraphic" in2="mascara" operator="in" result="faixas" />
+        <feDisplacementMap in="faixas" in2="ruido" scale="12" xChannelSelector="R" yChannelSelector="A" />
+      </filter>
     </defs>
-    <rect class="ceu" x="0" y="0" width="800" height="460" />
-    <polygon class="terra" [attr.points]="c.terra" />
 
-    @for (r of c.refs; track r.rotulo) {
-      <line class="referencia" [attr.x1]="r.x" [attr.x2]="700" [attr.y1]="r.y" [attr.y2]="r.y" />
-      <text class="rotulo-svg halo ref-texto" [attr.x]="r.tx" [attr.y]="r.y - 5" [attr.text-anchor]="r.ancora">{{ r.rotulo }}</text>
+    <!-- Céu com cúmulos, sol ou lua. -->
+    <rect class="ceu" x="0" y="0" [attr.width]="p.LARGURA" [attr.height]="p.HORIZONTE" />
+    @for (n of p.NUVENS; track n.t) {
+      <g class="nuvem" [attr.transform]="n.t">
+        @for (b of n.bolhas; track $index) { <circle [attr.cx]="b[0]" [attr.cy]="b[1]" [attr.r]="b[2]" /> }
+      </g>
     }
+    <circle class="astro-halo" [attr.cx]="p.SOL_X" cy="62" r="30" />
+    <circle class="astro" [attr.cx]="p.SOL_X" cy="62" r="14" />
 
-    <g class="pessoa" [attr.transform]="c.pessoa">
-      <circle cx="0" cy="-158" r="12" />
-      @for (p of corpo; track $index) {
-        <rect [attr.x]="p.x" [attr.y]="p.y" [attr.width]="p.w" [attr.height]="p.h" [attr.rx]="p.rx" />
+    <!-- Outra margem: morros, barrancos, chaminés, casas e a praia na beira d'água. -->
+    <path class="mata" [attr.d]="p.MATA" />
+    <path class="barranco-terra" [attr.d]="p.BARRANCOS" />
+    <path class="erosao" [attr.d]="p.EROSAO" />
+    @for (c of p.CHAMINES; track c.x) {
+      <rect class="chamine" [attr.x]="c.x" [attr.y]="c.y" [attr.width]="c.w" [attr.height]="c.h" />
+    }
+    @for (c of p.CASAS; track $index) {
+      <rect [attr.class]="c.classe" [attr.x]="c.x" [attr.y]="c.y" [attr.width]="c.w" [attr.height]="c.h" />
+    }
+    <g class="luzes">
+      @for (l of p.LUZES; track $index) { <circle [attr.cx]="l.x" [attr.cy]="l.y" r=".7" /> }
+    </g>
+    <rect class="praia" x="0" [attr.y]="w.praia.y" [attr.width]="p.LARGURA" [attr.height]="w.praia.h" />
+
+    <!-- Rio: superfície em perspectiva, ondas miúdas ao longe e grandes perto. -->
+    <rect class="agua" x="0" [attr.y]="w.longe" [attr.width]="p.LARGURA" [attr.height]="w.altura" />
+    <g class="porto" [attr.transform]="w.porto">
+      @for (b of p.BALSAS; track $index) {
+        <path class="balsa" [attr.d]="b.casco" /><path class="carga" [attr.d]="b.carga" />
       }
+      <path class="lancha" [attr.d]="p.LANCHA.casco" /><path class="rastro" [attr.d]="p.LANCHA.rastro" />
     </g>
 
-    <!-- Água por cima e translúcida: a parte submersa da pessoa aparece debaixo d'água. -->
-    <polygon class="agua" [attr.points]="c.agua" />
-    <line class="superficie-agua" [attr.x1]="c.xAgua" x2="800" [attr.y1]="c.yAgua" [attr.y2]="c.yAgua" />
-    <text class="leito" x="794" y="452" text-anchor="end">↓ mais fundo</text>
+    <!-- Luz na água: caminho de brilho do sol (ou da lua), reflexos dos pilares e das luzes, e o LED do mastro. -->
+    <g class="reflexo-astro">
+      <ellipse class="halo-astro" [attr.cx]="p.SOL_X" [attr.cy]="w.astro.halo.cy" rx="46" [attr.ry]="w.astro.halo.ry" />
+      <ellipse class="nucleo-astro" [attr.cx]="p.SOL_X" [attr.cy]="w.astro.halo.cy" rx="7" [attr.ry]="w.astro.halo.ry" />
+    </g>
+    <g class="reflexo-pilares" filter="url(#f-reflexo)">
+      @for (r of w.reflexos; track r.x) {
+        <rect [attr.x]="r.x" [attr.y]="w.y" [attr.width]="r.w" [attr.height]="r.h" />
+      }
+    </g>
+    <g class="luzes-reflexo" [attr.transform]="w.porto" filter="url(#f-reflexo)">
+      @for (l of p.LUZES; track $index) {
+        @if ($index % 3 === 0) { <rect [attr.x]="l.x" y="0" width="1" [attr.height]="6 + ($index % 4) * 3" /> }
+      }
+    </g>
+    <!-- Ponte: pilares até a água, tabuleiro, estais e mastro. À noite, LED. -->
+    @for (q of w.pilares; track q.x) {
+      <rect class="pilar" [attr.x]="q.x" [attr.y]="q.topo" [attr.width]="q.w" [attr.height]="q.h" />
+      <ellipse class="espuma" [attr.cx]="q.x + q.w / 2" [attr.cy]="w.y" [attr.rx]="q.w * 0.9" ry="1.3" />
+    }
+    <path class="estais" [attr.d]="p.ESTAIS" />
+    <polygon class="tabuleiro" [attr.points]="p.TABULEIRO" />
+    <path class="guarda" [attr.d]="p.GUARDA_CORPO" />
+    <g class="lampadas">
+      @for (l of p.LAMPADAS; track l.x) { <circle [attr.cx]="l.x" [attr.cy]="l.y" r="1.3" /> }
+    </g>
+    <g class="mastro">
+      <path [attr.d]="p.MASTRO.torre" />
+      <rect [attr.x]="p.MASTRO.viga.x" [attr.y]="p.MASTRO.viga.y" [attr.width]="p.MASTRO.viga.w" [attr.height]="p.MASTRO.viga.h" />
+      @for (pe of w.pernas; track pe.x) {
+        <rect [attr.x]="pe.x" [attr.y]="pe.y" [attr.width]="pe.w" [attr.height]="pe.h" />
+      }
+    </g>
+    <rect class="mastro-fenda" [attr.x]="p.MASTRO.fenda.x" [attr.y]="p.MASTRO.fenda.y" [attr.width]="p.MASTRO.fenda.w" [attr.height]="p.MASTRO.fenda.h" />
+    @for (pe of w.pernas; track pe.x) {
+      <ellipse class="espuma" [attr.cx]="pe.x + pe.w / 2" [attr.cy]="w.y" [attr.rx]="pe.w" ry="1.4" />
+    }
 
-    <rect class="regua" x="700" [attr.y]="c.reguaTopo" width="10" [attr.height]="470 - c.reguaTopo" />
-    @for (t of c.ticks; track t.c) {
-      <line class="tique" x1="700" [attr.x2]="t.par ? 710 : 705" [attr.y1]="t.y" [attr.y2]="t.y" />
-      @if (t.par) {
-        <text class="rotulo-svg halo" x="696" [attr.y]="t.y + 4" text-anchor="end">{{ t.c }}</text>
+    <!-- Régua no pilar: só aparece o que está fora d'água; os marcos ficam ao lado. -->
+    <rect class="regua" [attr.x]="p.REGUA_X" [attr.y]="rg.topo" width="9" [attr.height]="rg.altura" />
+    @for (m of rg.marcas; track m.c) {
+      <line class="tique" [attr.x1]="p.REGUA_X" [attr.x2]="p.REGUA_X + (m.par ? 9 : 5)" [attr.y1]="m.y" [attr.y2]="m.y" />
+      @if (m.par) {
+        <text class="rotulo-svg halo" [attr.x]="p.REGUA_X + 13" [attr.y]="m.y + 4">{{ m.c }}</text>
       }
     }
-    <text class="rotulo-svg" x="705" [attr.y]="c.reguaTopo - 4" text-anchor="middle">régua</text>
-    <text class="halo nivel" x="716" [attr.y]="c.yAgua - 6">{{ c.rotuloAgua }}</text>
+    @for (m of rg.marcos; track m.rotulo) {
+      @if (!m.submerso) {
+      <g [attr.class]="'marco ' + m.classe">
+        <line [attr.x1]="p.REGUA_X - 4" [attr.x2]="p.REGUA_X + 13" [attr.y1]="m.y" [attr.y2]="m.y" />
+        <text class="halo" [attr.x]="p.REGUA_X - 7" [attr.y]="m.y + 3.5" text-anchor="end">{{ m.rotulo }}</text>
+      </g>
+      }
+    }
+    <text class="halo nivel" [attr.x]="p.REGUA_X + 34" [attr.y]="w.y - 4">{{ w.cota }}</text>
+
   </svg>
 
-  <div class="painel">
-    @let p = painel();
-    <svg class="corpo" viewBox="0 0 140 230" role="img" [attr.aria-label]="'A pessoa ampliada: ' + p.texto">
-      <rect class="terra" x="0" [attr.y]="pesCorpo" width="140" height="20" />
-      <g class="pessoa" [attr.transform]="'translate(70 ' + pesCorpo + ') scale(' + escalaCorpo + ')'">
-        <circle cx="0" cy="-158" r="12" />
-        @for (q of corpo; track $index) {
-          <rect [attr.x]="q.x" [attr.y]="q.y" [attr.width]="q.w" [attr.height]="q.h" [attr.rx]="q.rx" />
-        }
-      </g>
-      @if (p.topo !== null) {
-        <rect class="agua-corpo" x="0" [attr.y]="p.topo" width="140" [attr.height]="230 - p.topo" />
-        <line class="superficie-agua" x1="0" x2="140" [attr.y1]="p.topo" [attr.y2]="p.topo" />
+  <!-- Camadas animadas por cima da cena: só deslizam, piscam ou mudam de tom, sem redesenhar a cena. -->
+  @let cm = camadas();
+  <div class="ondas ondas-longe" [style.top.%]="cm.longe.top" [style.height.%]="cm.longe.altura" aria-hidden="true">
+    <div class="textura" [style.background-image]="ruidoLonge"></div>
+  </div>
+  <div class="ondas ondas-perto" [style.top.%]="cm.perto.top" [style.height.%]="cm.perto.altura" aria-hidden="true">
+    <div class="textura" [style.background-image]="ruidoPerto"></div>
+  </div>
+  @for (lado of ['a', 'b']; track lado) {
+    <svg [attr.class]="'camada brilhos astro-brilhos brilhos-' + lado" viewBox="580 0 240 460" preserveAspectRatio="none" aria-hidden="true">
+      @for (g of lado === 'a' ? w.astro.a : w.astro.b; track $index) {
+        <rect [attr.x]="g.x" [attr.y]="g.y" [attr.width]="g.w" [attr.height]="g.h" [attr.rx]="+g.h / 2" [attr.fill-opacity]="g.o" />
       }
     </svg>
-    <app-selo [pct]="p.pct" />
-    <p class="painel-texto">{{ p.texto }}</p>
+  }
+  <div class="led" aria-hidden="true">
+    <svg class="camada led-estrutura" viewBox="300 0 400 460" preserveAspectRatio="none">
+      <defs>
+        <filter id="f-brilho-led" x="-20%" y="-5%" width="140%" height="110%"><feGaussianBlur stdDeviation="2.4" /></filter>
+      </defs>
+      @for (camada of ['brilho', 'nitido']; track camada) {
+        <g [attr.class]="'led-' + camada" [attr.filter]="camada === 'brilho' ? 'url(#f-brilho-led)' : null">
+          <path class="led-estais" [attr.d]="p.ESTAIS" />
+          <g class="led-mastro">
+            <path [attr.d]="p.MASTRO.torre" />
+            <rect [attr.x]="p.MASTRO.viga.x" [attr.y]="p.MASTRO.viga.y" [attr.width]="p.MASTRO.viga.w" [attr.height]="p.MASTRO.viga.h" />
+            @for (pe of w.pernas; track pe.x) {
+              <rect [attr.x]="pe.x" [attr.y]="pe.y" [attr.width]="pe.w" [attr.height]="pe.h" />
+            }
+          </g>
+        </g>
+      }
+    </svg>
+    <svg class="camada led-agua" viewBox="420 0 160 460" preserveAspectRatio="none">
+      <defs>
+        <radialGradient id="g-led-halo">
+          <stop offset="0" class="led-halo-centro" />
+          <stop offset="1" class="led-halo-borda" />
+        </radialGradient>
+      </defs>
+      <ellipse class="led-halo" [attr.cx]="p.MEIO" [attr.cy]="w.led.halo.cy" rx="40" [attr.ry]="w.led.halo.ry" />
+      <ellipse class="led-nucleo" [attr.cx]="p.MEIO" [attr.cy]="w.led.halo.cy" rx="9" [attr.ry]="w.led.halo.ry" />
+    </svg>
+    @for (lado of ['a', 'b']; track lado) {
+      <svg [attr.class]="'camada brilhos led-brilhos brilhos-' + lado" viewBox="420 0 160 460" preserveAspectRatio="none">
+        @for (g of lado === 'a' ? w.led.a : w.led.b; track $index) {
+          <rect [attr.x]="g.x" [attr.y]="g.y" [attr.width]="g.w" [attr.height]="g.h" [attr.rx]="+g.h / 2" [attr.fill-opacity]="g.o" />
+        }
+      </svg>
+    }
   </div>
+
+  <!-- Barco de recreio atravessando o rio na frente da ponte, balançando nas ondas. -->
+  @let b = p.BARCO;
+  <div class="barco-linha" [style.top.%]="cm.barco" aria-hidden="true">
+    <div class="barco-viagem"><div class="barco-balanco">
+      <svg viewBox="-70 -90 140 95">
+        <path class="b-esteira" [attr.d]="b.esteira" />
+        <path class="b-branco" [attr.d]="b.casco" />
+        <path class="b-vermelho" [attr.d]="b.cascoVermelho" />
+        <path class="b-vermelho" [attr.d]="b.leme" />
+        <path class="b-friso" [attr.d]="b.frisos" />
+        <rect class="b-interior" [attr.x]="b.interior1.x" [attr.y]="b.interior1.y" [attr.width]="b.interior1.w" [attr.height]="b.interior1.h" />
+        <path class="b-branco" [attr.d]="b.popa1" />
+        <path class="b-grade" [attr.d]="b.grade1" />
+        <rect class="b-interior" [attr.x]="b.interior2.x" [attr.y]="b.interior2.y" [attr.width]="b.interior2.w" [attr.height]="b.interior2.h" />
+        <path class="b-branco" [attr.d]="b.popa2" />
+        <path class="b-grade" [attr.d]="b.grade2" />
+        <rect class="b-branco" [attr.x]="b.piso2.x" [attr.y]="b.piso2.y" [attr.width]="b.piso2.w" [attr.height]="b.piso2.h" />
+        <path class="b-lona" [attr.d]="b.lona1" />
+        <path class="b-branco" [attr.d]="b.cabine" />
+        <path class="b-vermelho" [attr.d]="b.portas" />
+        <path class="b-grade" [attr.d]="b.grade3" />
+        <rect class="b-branco" [attr.x]="b.piso3.x" [attr.y]="b.piso3.y" [attr.width]="b.piso3.w" [attr.height]="b.piso3.h" />
+        <path class="b-lona" [attr.d]="b.lona2" />
+        <path class="b-branco" [attr.d]="b.teto" />
+        <path class="b-bote" [attr.d]="b.botes" />
+        <path class="b-friso" [attr.d]="b.frisoPopa" />
+        <path class="b-vigia" [attr.d]="b.vigias" />
+        <path class="b-mastro" [attr.d]="b.mastro" />
+        <path class="b-antena" [attr.d]="b.antena" />
+        <path class="b-corda" [attr.d]="b.cordas" />
+        @for (pn of b.pneus; track pn.x) {
+          <circle class="b-pneu" [attr.cx]="pn.x" [attr.cy]="pn.y" r="3.4" />
+          <circle class="b-pneu-furo" [attr.cx]="pn.x" [attr.cy]="pn.y" r="1.5" />
+        }
+      </svg>
+    </div></div>
+  </div>
+
+  <div class="hud">
+    <span class="hud-rotulo">Régua</span>
+    <strong class="hud-cota">{{ w.cota }}</strong>
+    <app-selo [pct]="w.pct" />
+    <span class="hud-texto">{{ w.texto }}</span>
+  </div>
+
+  <figure class="corte">
+    <figcaption>Fundo sob a ponte</figcaption>
+    <svg viewBox="0 0 160 100" role="img" [attr.aria-label]="'Profundidade no canal: cerca de ' + ct.prof">
+      <defs>
+        <linearGradient id="g-corte-agua" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" class="agua-raso" />
+          <stop offset="1" class="agua-fundo" />
+        </linearGradient>
+      </defs>
+      <rect class="corte-agua" x="0" [attr.y]="ct.y" width="160" [attr.height]="100 - ct.y" />
+      <path class="corte-terra" [attr.d]="ct.terra" />
+      @for (m of ct.marcos; track m.rotulo) {
+        <line [attr.class]="'corte-marco ' + m.classe" x1="20" x2="140" [attr.y1]="m.y" [attr.y2]="m.y" />
+      }
+      <line class="corte-superficie" x1="0" x2="160" [attr.y1]="ct.y" [attr.y2]="ct.y" />
+      <line class="corte-seta" x1="80" x2="80" [attr.y1]="ct.y + 2" [attr.y2]="ct.leitoY - 2" />
+      <path class="corte-ponta" [attr.d]="'M77 ' + (ct.leitoY - 5) + 'L80 ' + (ct.leitoY - 1) + 'L83 ' + (ct.leitoY - 5)" />
+    </svg>
+    <strong class="corte-prof">≈ {{ ct.prof }} <span>de profundidade</span></strong>
+  </figure>
+  <span class="local">Ponte Rio Negro · Manaus (AM)</span>
 </div>
 
 <div class="deslizador">
+  <span class="deslizador-rotulo">Percorrer os dias</span>
   <input type="range" min="0" [max]="dados().serie.length - 1" [value]="indiceDia() < 0 ? dados().serie.length - 1 : indiceDia()"
          aria-label="Dia mostrado na cena" (input)="escolherDia($event)" />
   <output>{{ rotuloDia() }}</output>
 </div>
 
 <p class="legenda" aria-live="polite">{{ legenda() }}</p>
-<p class="nota">A ANA mede a <b>cota</b> numa régua cujo zero é um ponto de referência local: 16 m na régua não quer dizer 16 m de fundo. O leito do rio continua bem abaixo do que aparece aqui. O que a cena mostra é o quanto a água sobe e desce na margem.</p>
+<p class="nota"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M12 11v5.5M12 7.7v.2" /></svg><span>Ilustração aproximada do trecho central da ponte: o vão estaiado de 400 m e o mastro, que passa de 180 m de altura. A escala vertical é ampliada perto da água, para a subida e a descida do rio aparecerem. O fundo do corte é ilustrativo: a ANA mede a <b>cota</b> numa régua cujo zero é um ponto de referência local, então ela não diz a profundidade real.</span></p>

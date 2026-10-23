@@ -1,32 +1,110 @@
 @let d = dados();
 @let ref = referencia();
 @let sel = selecao();
-<div class="pagina">
-  <header>
-    <h1>{{ d ? d.rio + ' em ' + d.cidade + ' (' + d.uf + ')' : 'Nível dos rios' }}</h1>
-    <p>{{ d ? 'Estação ANA ' + d.codigo_ana + ' · cota da régua, em metros' : 'Dados de telemetria da ANA' }}</p>
-  </header>
+@let t = tendencia();
+@if (carregando()) {
+  <div class="progresso" role="progressbar" aria-label="Carregando dados"></div>
+}
 
-  <div class="filtros">
-    <label>
-      Estação
-      <select [value]="estacao()" (change)="mudarEstacao($event)">
-        @for (e of estacoes(); track e.estacao) {
-          <option [value]="e.estacao" [selected]="e.estacao === estacao()">{{ e.cidade }} ({{ e.uf }}) · {{ e.rio }}</option>
+<header class="hero">
+  <div class="hero-brilho" aria-hidden="true"></div>
+  <div class="hero-interno">
+    <div class="barra">
+      <span class="marca">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.6 4.3 6.5 8 6.5 11.4A6.5 6.5 0 0 1 12 20.5a6.5 6.5 0 0 1-6.5-6.6C5.5 10.5 8.4 6.8 12 2.5Z" /></svg>
+        Nível dos Rios
+      </span>
+      <button type="button" class="tema" (click)="alternarTema()"
+              [attr.aria-label]="tema() === 'dark' ? 'Mudar para o tema claro' : 'Mudar para o tema escuro'"
+              [attr.title]="tema() === 'dark' ? 'Tema claro' : 'Tema escuro'">
+        @if (tema() === 'dark') {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" /><path d="M12 2v2.5M12 19.5V22M4.2 4.2 6 6M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8" /></svg>
+        } @else {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z" /></svg>
         }
-      </select>
-    </label>
-    <div class="segmento" role="group" aria-label="Período">
-      @for (a of periodos; track a) {
-        <button type="button" [attr.aria-pressed]="a === anos()" (click)="mudarAnos(a)">
-          {{ a }} {{ a === 1 ? 'ano' : 'anos' }}
-        </button>
+      </button>
+    </div>
+
+    <div class="destaque">
+      <div class="identidade">
+        @if (d) {
+          <p class="sobretitulo">Estação ANA {{ d.codigo_ana }} · cota da régua</p>
+          <h1>{{ d.rio }}</h1>
+          <p class="local">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" /><circle cx="12" cy="10" r="2.3" /></svg>
+            {{ d.cidade }} ({{ d.uf }})
+          </p>
+        } @else if (!avisoErro()) {
+          <div class="esqueleto claro" style="width: 180px; height: 14px"></div>
+          <div class="esqueleto claro" style="width: min(360px, 80%); height: 46px; margin-top: 14px"></div>
+          <div class="esqueleto claro" style="width: 140px; height: 16px; margin-top: 12px"></div>
+        } @else {
+          <p class="sobretitulo">Dados de telemetria da ANA</p>
+          <h1>Nível dos rios</h1>
+        }
+      </div>
+
+      @if (d) {
+        <div class="leitura" aria-live="polite">
+          <span class="leitura-rotulo">Nível agora · {{ dataBR(d.data_atual) }}</span>
+          <span class="leitura-valor">{{ fmt(d.atual_m) }}<small> m</small></span>
+          <span class="chips">
+            @if (t) {
+              <span class="chip" [attr.data-tom]="t.tom"><b>{{ t.icone }}</b> {{ t.texto }}</span>
+            }
+            @if (pctAtual() !== null) {
+              <app-selo [pct]="pctAtual()!" />
+            }
+          </span>
+        </div>
+      } @else if (!avisoErro()) {
+        <div class="leitura">
+          <div class="esqueleto claro" style="width: 120px; height: 12px"></div>
+          <div class="esqueleto claro" style="width: 220px; height: 64px; margin-top: 10px"></div>
+        </div>
       }
+    </div>
+
+    <div class="controles">
+      <label class="campo">
+        <span>Estação</span>
+        <span class="select">
+          <select [value]="estacao()" (change)="mudarEstacao($event)">
+            @for (e of estacoes(); track e.estacao) {
+              <option [value]="e.estacao" [selected]="e.estacao === estacao()">{{ e.cidade }} ({{ e.uf }}) · {{ e.rio }}</option>
+            }
+          </select>
+        </span>
+      </label>
+      <div class="campo">
+        <span id="rotulo-periodo">Período</span>
+        <div class="segmento" role="group" aria-labelledby="rotulo-periodo">
+          @for (a of periodos; track a) {
+            <button type="button" [attr.aria-pressed]="a === anos()" (click)="mudarAnos(a)">
+              {{ a }} {{ a === 1 ? 'ano' : 'anos' }}
+            </button>
+          }
+        </div>
+      </div>
     </div>
   </div>
 
+  <svg class="ondas" viewBox="0 0 2880 120" preserveAspectRatio="none" aria-hidden="true">
+    <path class="onda o1" d="M0,60 C180,20 540,100 720,60 S1260,100 1440,60 S1980,100 2160,60 S2700,100 2880,60 V120 H0 Z" />
+    <path class="onda o2" d="M0,72 C180,40 540,104 720,72 S1260,104 1440,72 S1980,104 2160,72 S2700,104 2880,72 V120 H0 Z" />
+    <path class="onda o3" d="M0,88 C180,66 540,110 720,88 S1260,110 1440,88 S1980,110 2160,88 S2700,110 2880,88 V120 H0 Z" />
+  </svg>
+</header>
+
+<div class="pagina">
   @if (aviso()) {
-    <div class="aviso" role="status">{{ aviso() }}</div>
+    <div class="aviso" [class.erro]="avisoErro()" role="status">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.5" />
+        @if (avisoErro()) { <path d="M12 7.5v5.5M12 16.3v.2" /> } @else { <path d="M12 11v5.5M12 7.7v.2" /> }
+      </svg>
+      <span>{{ aviso() }}</span>
+    </div>
   }
 
   @if (d && ref && sel) {
@@ -41,18 +119,36 @@
         <app-cena [dados]="d" [referencia]="ref" [selecao]="sel" (selecionar)="selecao.set($event)" />
       </section>
 
-      <details>
-        <summary>Ver os dados em tabela (resumo mensal)</summary>
-        <table>
-          <thead><tr><th>Mês</th><th>Média (m)</th><th>Mínimo (m)</th><th>Máximo (m)</th></tr></thead>
-          <tbody>
-            @for (r of tabela(); track r.mes) {
-              <tr><td>{{ r.mes }}</td><td>{{ r.media }}</td><td>{{ r.min }}</td><td>{{ r.max }}</td></tr>
-            }
-          </tbody>
-        </table>
+      <details class="cartao tabela">
+        <summary>
+          <span>Ver os dados em tabela <small>resumo mensal</small></span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </summary>
+        <div class="rolagem">
+          <table>
+            <thead><tr><th>Mês</th><th>Média (m)</th><th>Mínimo (m)</th><th>Máximo (m)</th></tr></thead>
+            <tbody>
+              @for (r of tabela(); track r.mes) {
+                <tr><td>{{ r.mes }}</td><td>{{ r.media }}</td><td>{{ r.min }}</td><td>{{ r.max }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </details>
-      <p class="nota">{{ fonte() }}</p>
     </main>
+  } @else if (!avisoErro()) {
+    <div class="esqueletos" aria-hidden="true">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="esqueleto bloco"></div>
+      }
+      <div class="esqueleto grande"></div>
+    </div>
   }
+
+  <footer>
+    @if (d) {
+      <p>{{ fonte() }}</p>
+    }
+    <p>Dados públicos da <a href="https://www.snirh.gov.br/hidrotelemetria/" target="_blank" rel="noopener">Agência Nacional de Águas (ANA)</a></p>
+  </footer>
 </div>

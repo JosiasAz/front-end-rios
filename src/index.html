@@ -5,7 +5,19 @@
   <title>Nível dos Rios</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nível dos rios do Brasil em tempo real, com dados de telemetria da ANA: cheias, secas e o que isso significa na beira do rio.">
+  <meta name="theme-color" content="#0f4c81">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <script>
+    // Aplica o tema salvo antes do Angular subir, para não piscar.
+    try {
+      var t = localStorage.getItem('tema');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <app-root></app-root>

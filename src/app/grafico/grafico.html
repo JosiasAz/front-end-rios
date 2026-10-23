@@ -1,6 +1,15 @@
 @let g = geo();
-<h2>{{ titulo() }}</h2>
-<p class="sub">Linha: mediana do dia · faixa: mínimo a máximo do dia · clique num dia para vê-lo no rio abaixo</p>
+<div class="cabeca">
+  <div>
+    <h2>{{ titulo() }}</h2>
+    <p class="sub">Clique num dia para vê-lo no rio, logo abaixo</p>
+  </div>
+  <ul class="legenda" aria-label="Legenda">
+    <li><i class="amostra-linha"></i>mediana do dia</li>
+    <li><i class="amostra-faixa"></i>mínimo a máximo</li>
+    <li><i class="amostra-mediana"></i>{{ referencia().aproximada ? 'mediana do período' : 'dia típico' }}</li>
+  </ul>
+</div>
 <div class="caixa">
   <svg
     [attr.viewBox]="'0 0 ' + g.W + ' ' + g.H"
@@ -15,6 +24,12 @@
     (blur)="hover.set(null)"
     (keydown)="tecla($event)"
   >
+    <defs>
+      <linearGradient id="g-faixa" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" class="faixa-topo" />
+        <stop offset="1" class="faixa-fundo" />
+      </linearGradient>
+    </defs>
     @for (t of g.gradeY; track t.v) {
       <line class="grade" [class.base]="t.base" [attr.x1]="g.m.l" [attr.x2]="g.W - g.m.r" [attr.y1]="t.y" [attr.y2]="t.y" />
       <text class="rotulo-svg" text-anchor="end" [attr.x]="g.m.l - 6" [attr.y]="t.y + 4">{{ t.rotulo }}</text>
@@ -35,6 +50,7 @@
 
     @if (g.marca; as s) {
       <line class="sel" [attr.x1]="s.x" [attr.x2]="s.x" [attr.y1]="g.m.t" [attr.y2]="g.H - g.m.b" />
+      <circle class="sel-pulso" r="5" [attr.cx]="s.x" [attr.cy]="s.y" />
       <circle class="sel-ponto" r="5" [attr.cx]="s.x" [attr.cy]="s.y" />
     }
     @if (dica(); as d) {

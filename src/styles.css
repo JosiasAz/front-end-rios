@@ -1,81 +1,212 @@
 :root {
   color-scheme: light;
-  --pagina: #f9f9f7;
-  --superficie: #fcfcfb;
-  --texto: #0b0b0b;
-  --texto-2: #52514e;
-  --mudo: #898781;
-  --grade: #e1e0d9;
-  --eixo: #c3c2b7;
-  --borda: rgba(11, 11, 11, 0.10);
-  --serie: #2a78d6;
-  --agua: #2a78d6;
-  --agua-topo: #86b6ef;
-  --terra: #d8ccb6;
-  --terra-borda: #b9a988;
-  --pessoa: #2b2a28;
-  --selecao: #eb6834;
-  --bom: #0ca30c;
-  --alerta: #fab219;
-  --critico: #d03b3b;
+  --pagina: #f3f6fa;
+  --superficie: #ffffff;
+  --superficie-2: #f6f8fb;
+  --texto: #0c1726;
+  --texto-2: #4a5568;
+  --mudo: #8691a2;
+  --grade: #e6ebf1;
+  --eixo: #c9d2de;
+  --borda: rgba(15, 35, 65, 0.09);
+  --serie: #1f6fd1;
+  --agua: #1f6fd1;
+  --agua-topo: #7db4f2;
+  --cena-ceu-topo: #5fa8e6;
+  --cena-ceu-horizonte: #e9eef0;
+  --cena-astro: #fff4c9;
+  --cena-mata: #4f7a46;
+  --cena-barro: #c99a68;
+  --cena-areia: #e6d6b0;
+  --cena-leito: #4a3424;
+  --cena-rio-raso: #3a4f72;
+  --cena-rio-fundo: #15213a;
+  --cena-ponte: #eef0f2;
+  --cena-ponte-sombra: #a9b1ba;
+  --cena-estai: #8d96a1;
+  --cena-mastro: #eef0f2;
+  --cena-luzes: 0;
+  --cena-led: none;
+  --cena-ondulacao: .55;
+  --cena-interior: #34383e;
+  --cena-brilho-sol: .85;
+  --cena-agua-horizonte: #a3b8cb;
+  --cena-crista: rgba(226, 237, 250, .5);
+  --cena-cavado: rgba(4, 12, 28, .5);
+  --cena-nuvem: #ffffff;
+  --cena-nuvem-opacidade: .92;
+  --cena-espuma: rgba(255, 255, 255, .8);
+  --cena-chamine: #7d5444;
+  --cena-casa: #f1f0eb;
+  --cena-casa-cor: 1;
+  --selecao: #f0632a;
+  --bom: #12a150;
+  --alerta: #e8a00c;
+  --critico: #d93636;
+  --hero-1: #082341;
+  --hero-2: #0d4377;
+  --hero-3: #1a7cc4;
+  --sombra-1: 0 1px 2px rgba(15, 35, 65, .05), 0 1px 1px rgba(15, 35, 65, .03);
+  --sombra-2: 0 1px 2px rgba(15, 35, 65, .04), 0 8px 24px -6px rgba(15, 35, 65, .10), 0 24px 48px -24px rgba(15, 35, 65, .12);
+  --sombra-3: 0 2px 4px rgba(15, 35, 65, .06), 0 16px 40px -8px rgba(15, 35, 65, .18);
+  --raio: 18px;
+  --fonte: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fonte-titulo: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --suave: cubic-bezier(.2, .8, .2, 1);
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
-    --pagina: #0d0d0d;
-    --superficie: #1a1a19;
-    --texto: #f0efec;
-    --texto-2: #c3c2b7;
-    --grade: #2c2c2a;
-    --eixo: #383835;
-    --borda: rgba(255, 255, 255, 0.10);
-    --serie: #3987e5;
-    --agua: #256abf;
-    --agua-topo: #5598e7;
-    --terra: #4a4234;
-    --terra-borda: #6b5f4a;
-    --pessoa: #f0efec;
-    --selecao: #d95926;
+    --pagina: #070d16;
+    --superficie: #0f1724;
+    --superficie-2: #141e2e;
+    --texto: #eaf1fb;
+    --texto-2: #a9b6c8;
+    --mudo: #75839a;
+    --grade: #1c2737;
+    --eixo: #2a384c;
+    --borda: rgba(160, 195, 240, 0.10);
+    --serie: #4f9cf5;
+    --agua: #2a74cf;
+    --agua-topo: #5ea6f5;
+    --cena-ceu-topo: #050b19;
+    --cena-ceu-horizonte: #2a2f4a;
+    --cena-astro: #e8edf5;
+    --cena-mata: #0d1712;
+    --cena-barro: #3d2f20;
+    --cena-areia: #4d4535;
+    --cena-leito: #1c140c;
+    --cena-rio-raso: #0f1729;
+    --cena-rio-fundo: #05080f;
+    --cena-ponte: #2b3240;
+    --cena-ponte-sombra: #1c222c;
+    --cena-estai: #3b4352;
+    --cena-mastro: #2b3240;
+    --cena-luzes: 1;
+    --cena-led: block;
+    --cena-ondulacao: .3;
+    --cena-interior: #ffcf72;
+    --cena-brilho-sol: .75;
+    --cena-agua-horizonte: #1b2438;
+    --cena-crista: rgba(140, 160, 210, .2);
+    --cena-cavado: rgba(0, 0, 0, .55);
+    --cena-nuvem: #1d2538;
+    --cena-nuvem-opacidade: .55;
+    --cena-espuma: rgba(200, 210, 230, .25);
+    --cena-chamine: #2a2420;
+    --cena-casa: #3a3f4a;
+    --cena-casa-cor: .35;
+    --selecao: #ff7a45;
+    --hero-1: #040a14;
+    --hero-2: #0a2140;
+    --hero-3: #124a85;
+    --sombra-1: 0 0 0 1px rgba(160, 195, 240, .04);
+    --sombra-2: 0 0 0 1px rgba(160, 195, 240, .04), 0 12px 32px -12px rgba(0, 0, 0, .6);
+    --sombra-3: 0 0 0 1px rgba(160, 195, 240, .06), 0 20px 48px -12px rgba(0, 0, 0, .7);
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --pagina: #0d0d0d;
-  --superficie: #1a1a19;
-  --texto: #f0efec;
-  --texto-2: #c3c2b7;
-  --grade: #2c2c2a;
-  --eixo: #383835;
-  --borda: rgba(255, 255, 255, 0.10);
-  --serie: #3987e5;
-  --agua: #256abf;
-  --agua-topo: #5598e7;
-  --terra: #4a4234;
-  --terra-borda: #6b5f4a;
-  --pessoa: #f0efec;
-  --selecao: #d95926;
+  --pagina: #070d16;
+  --superficie: #0f1724;
+  --superficie-2: #141e2e;
+  --texto: #eaf1fb;
+  --texto-2: #a9b6c8;
+  --mudo: #75839a;
+  --grade: #1c2737;
+  --eixo: #2a384c;
+  --borda: rgba(160, 195, 240, 0.10);
+  --serie: #4f9cf5;
+  --agua: #2a74cf;
+  --agua-topo: #5ea6f5;
+  --cena-ceu-topo: #050b19;
+  --cena-ceu-horizonte: #2a2f4a;
+  --cena-astro: #e8edf5;
+  --cena-mata: #0d1712;
+  --cena-barro: #3d2f20;
+  --cena-areia: #4d4535;
+  --cena-leito: #1c140c;
+  --cena-rio-raso: #0f1729;
+  --cena-rio-fundo: #05080f;
+  --cena-ponte: #2b3240;
+  --cena-ponte-sombra: #1c222c;
+  --cena-estai: #3b4352;
+  --cena-mastro: #2b3240;
+  --cena-luzes: 1;
+  --cena-led: block;
+  --cena-ondulacao: .3;
+  --cena-interior: #ffcf72;
+  --cena-brilho-sol: .75;
+  --cena-agua-horizonte: #1b2438;
+  --cena-crista: rgba(140, 160, 210, .2);
+  --cena-cavado: rgba(0, 0, 0, .55);
+  --cena-nuvem: #1d2538;
+  --cena-nuvem-opacidade: .55;
+  --cena-espuma: rgba(200, 210, 230, .25);
+  --cena-chamine: #2a2420;
+  --cena-casa: #3a3f4a;
+  --cena-casa-cor: .35;
+  --selecao: #ff7a45;
+  --hero-1: #040a14;
+  --hero-2: #0a2140;
+  --hero-3: #124a85;
+  --sombra-1: 0 0 0 1px rgba(160, 195, 240, .04);
+  --sombra-2: 0 0 0 1px rgba(160, 195, 240, .04), 0 12px 32px -12px rgba(0, 0, 0, .6);
+  --sombra-3: 0 0 0 1px rgba(160, 195, 240, .06), 0 20px 48px -12px rgba(0, 0, 0, .7);
 }
 
 * { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   background: var(--pagina);
   color: var(--texto);
-  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 15px/1.5 var(--fonte);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color .3s, color .3s;
 }
+::selection { background: color-mix(in srgb, var(--agua) 30%, transparent); }
+:focus-visible { outline: 2px solid var(--serie); outline-offset: 2px; border-radius: 6px; }
+button { -webkit-tap-highlight-color: transparent; }
 
 .cartao {
   background: var(--superficie);
   border: 1px solid var(--borda);
-  border-radius: 12px;
-  padding: 18px;
-  margin-top: 16px;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-2);
+  padding: 24px;
+  margin-top: 20px;
   min-width: 0;
+  animation: surgir .6s var(--suave) both;
 }
-.cartao h2 { margin: 0; font-size: 16px; }
-.cartao .sub { margin: 2px 0 12px; color: var(--texto-2); font-size: 13px; }
+.cartao h2 {
+  margin: 0; font: 600 18px/1.3 var(--fonte-titulo); letter-spacing: -0.01em;
+  display: flex; align-items: center; gap: 10px;
+}
+.cartao h2::before {
+  content: ""; width: 4px; height: 18px; border-radius: 4px; flex: none;
+  background: linear-gradient(180deg, var(--agua-topo), var(--agua));
+}
+.cartao .sub { margin: 4px 0 16px 14px; color: var(--texto-2); font-size: 13.5px; }
 .nota { color: var(--texto-2); font-size: 13px; margin: 10px 0 0; }
 
 /* Texto do SVG: rótulos discretos com halo da cor do fundo para ler sobre linhas e água. */
-.rotulo-svg { font-size: 11px; fill: var(--mudo); font-variant-numeric: tabular-nums; }
+.rotulo-svg { font-size: 11px; fill: var(--mudo); font-variant-numeric: tabular-nums; font-family: var(--fonte); }
 .halo { paint-order: stroke; stroke: var(--superficie); stroke-width: 4px; stroke-linejoin: round; }
+
+/* Placeholder animado enquanto os dados chegam. */
+.esqueleto {
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--grade) 0%, var(--superficie-2) 50%, var(--grade) 100%);
+  background-size: 200% 100%;
+  animation: brilho 1.4s ease-in-out infinite;
+}
+
+@keyframes surgir { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

@@ -74,7 +74,7 @@ export function frasePercentil(pct: number): string {
 /** Onde a água bate numa pessoa em pé na cota do dia típico (mediana histórica). */
 export function frasePessoa(ref: Referencia, cota: number): string {
   const h = cota - ref.mediana_m;
-  if (h <= 0) return `a água estaria ${fmt(-h)} m abaixo dos seus pés`;
+  if (h <= 0) return `a água estaria ${fmt(Math.abs(h))} m abaixo dos seus pés`;
   if (h < 0.3) return 'a água estaria nos seus tornozelos';
   if (h < 0.6) return 'a água estaria nos seus joelhos';
   if (h < 1.0) return 'a água estaria na sua cintura';

@@ -1,25 +1,33 @@
 import { Component, computed, effect, input, output, signal, untracked } from '@angular/core';
-import { ALTURA_PESSOA, atalhos, dataBR, fmt, frasePercentil, frasePessoa, percentil, selecaoDoDia } from '../nivel';
+import { atalhos, dataBR, fmt, frasePercentil, percentil, selecaoDoDia } from '../nivel';
 import { Referencia, Selecao, Serie } from '../rios.models';
 import { Selo } from '../selo/selo';
+import * as P from './ponte';
 
-// Cena em coordenadas fixas (viewBox 800 x 460); a água e o leito seguem até BASE, abaixo da tela.
-const TOPO = 16;
-const FUNDO = 460;
-const BASE = 470;
-const REGUA = 700;
-/** Silhueta em centímetros com os pés na origem (cabeça é um círculo à parte). */
-export const CORPO = [
-  { x: -15, y: -142, w: 30, h: 62, rx: 12 },
-  { x: -24, y: -138, w: 9, h: 56, rx: 4.5 },
-  { x: 15, y: -138, w: 9, h: 56, rx: 4.5 },
-  { x: -13, y: -88, w: 12, h: 88, rx: 6 },
-  { x: 1, y: -88, w: 12, h: 88, rx: 6 },
-];
-const ESCALA_CORPO = 1.1; // px por cm no painel ampliado
-const PES_CORPO = 210;
+/**
+ * Textura de ondas (cristas claras e cavados escuros) gerada uma vez pelo navegador como imagem e repetida
+ * sem emenda. Depois ela só desliza, o que a placa de vídeo faz sem redesenhar nada.
+ */
+function ruido(frequencia: string, semente: number) {
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='160'>` +
+    `<filter id='f' x='0' y='0' width='100%' height='100%'>` +
+    `<feTurbulence type='fractalNoise' baseFrequency='${frequencia}' numOctaves='3' seed='${semente}' stitchTiles='stitch' result='r'/>` +
+    `<feColorMatrix in='r' type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 3.4 -1.9' result='c'/>` +
+    `<feColorMatrix in='r' type='matrix' values='0 0 0 0 0  0 0 0 0 .02  0 0 0 0 .08  0 0 0 -3 1.3' result='v'/>` +
+    `<feMerge><feMergeNode in='v'/><feMergeNode in='c'/></feMerge></filter>` +
+    `<rect width='100%' height='100%' filter='url(#f)'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
 
-/** Corte da margem com uma pessoa de 1,70 m em pé na cota do dia típico e a água no nível escolhido. */
+/** Leito no meio do canal, sob a ponte (ilustrativo), na cota de Manaus. */
+const LEITO_CANAL = -10;
+
+/**
+ * Ponte Rio Negro (Manaus) como uma pessoa vê do rio, com a água no nível escolhido, e um corte do rio com a
+ * profundidade. Vale para todas as estações: a água fica na altura de um dia típico em Manaus e sobe ou desce
+ * o quanto a estação varia em relação ao dia típico dela.
+ */
 @Component({
   selector: 'app-cena',
   imports: [Selo],
@@ -32,18 +40,20 @@ export class Cena {
   readonly selecao = input.required<Selecao>();
   readonly selecionar = output<Selecao>();
 
-  protected readonly corpo = CORPO;
-  protected readonly pesCorpo = PES_CORPO;
-  protected readonly escalaCorpo = ESCALA_CORPO;
+  protected readonly p = P;
+  /** Sem água animada se o sistema pedir menos movimento. */
+  protected readonly reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /** Ondas: a mesma textura bem miúda ao longe e larga perto (dá a perspectiva). */
+  protected readonly ruidoLonge = ruido('0.02 0.12', 9);
+  protected readonly ruidoPerto = ruido('0.012 0.07', 4);
   /** Cota desenhada agora (anima até a cota da seleção). */
   protected readonly cota = signal<number | null>(null);
 
   constructor() {
-    const reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
     effect((onCleanup) => {
       const alvo = this.selecao().cota;
       const de = untracked(this.cota);
-      if (de === null || reduzir) {
+      if (de === null || this.reduzir) {
         this.cota.set(alvo);
         return;
       }
@@ -65,64 +75,105 @@ export class Cena {
 
   protected readonly rotuloDia = computed(() => (this.indiceDia() >= 0 ? dataBR(this.selecao().data) : 'fora do período'));
 
-  /** Partes fixas da cena: escala vertical, margem, linhas de referência, pessoa e régua. */
-  private readonly base = computed(() => {
-    const d = this.dados();
+  /** Altura na cena (cota em Manaus) de uma cota da estação escolhida. */
+  private readonly naPonte = computed(() => {
+    const mediana = this.referencia().mediana_m;
+    return (c: number) => P.COTA_TIPICA + (c - mediana);
+  });
+
+  /** Marcas de referência (cheia recorde, dia típico, seca recorde), em cota da estação. */
+  private readonly marcos = computed(() => {
     const ref = this.referencia();
-    const lo = Math.min(ref.recorde_minimo_m, d.minimo_m) - 3;
-    const hi = Math.max(ref.recorde_maximo_m, d.maximo_m, ref.mediana_m + ALTURA_PESSOA) + 3;
-    const y = (c: number) => TOPO + ((hi - c) / (hi - lo)) * (FUNDO - TOPO);
-    // Margem em rampa: de x=70 (cota hi) a x=640 (cota lo), seguindo para baixo fora da tela.
-    const xMargem = (c: number) => 70 + ((hi - c) / (hi - lo)) * 570;
-    const pxPorM = (FUNDO - TOPO) / (hi - lo);
-    const xLeito = xMargem(lo - (BASE - FUNDO) / pxPorM);
-
-    const nomeMax = ref.aproximada ? 'máximo do período' : 'cheia recorde';
-    const nomeMin = ref.aproximada ? 'mínimo do período' : 'seca recorde';
-    const refs = ([
-      [ref.recorde_maximo_m, `${nomeMax} ${ref.data_recorde_maximo.slice(0, 4)} · ${fmt(ref.recorde_maximo_m)} m`],
-      [ref.mediana_m, `dia típico · ${fmt(ref.mediana_m)} m`],
-      [ref.recorde_minimo_m, `${nomeMin} ${ref.data_recorde_minimo.slice(0, 4)} · ${fmt(ref.recorde_minimo_m)} m`],
-    ] as const).map(([c, rotulo]) => {
-      const x = xMargem(c);
-      const direita = x > 420; // perto da régua o rótulo vai para o lado da terra
-      return { x, y: y(c), rotulo, tx: direita ? x - 8 : x + 8, ancora: direita ? 'end' : 'start' };
-    });
-
-    const ticks = [];
-    for (let c = Math.ceil(lo); c <= hi; c++) ticks.push({ c, y: y(c), par: c % 2 === 0 });
-
-    return {
-      y, xMargem, xLeito, refs, ticks,
-      reguaTopo: y(hi),
-      terra: `0,${y(hi)} 70,${y(hi)} ${xLeito},${BASE} 0,${BASE}`,
-      pessoa: `translate(${xMargem(ref.mediana_m) - 4} ${y(ref.mediana_m)}) scale(${pxPorM / 100})`,
-    };
+    const max = ref.aproximada ? 'máx.' : 'cheia';
+    const min = ref.aproximada ? 'mín.' : 'seca';
+    return [
+      { c: ref.recorde_maximo_m, rotulo: `${max} ${ref.data_recorde_maximo.slice(0, 4)}`, classe: 'marco-cheia' },
+      { c: ref.mediana_m, rotulo: 'típico', classe: 'marco-tipico' },
+      { c: ref.recorde_minimo_m, rotulo: `${min} ${ref.data_recorde_minimo.slice(0, 4)}`, classe: 'marco-seca' },
+    ];
   });
 
   /** Água no nível animado. */
-  protected readonly cena = computed(() => {
-    const b = this.base();
+  protected readonly agua = computed(() => {
     const c = this.cota() ?? this.selecao().cota;
-    const yw = b.y(c);
+    const h = c - this.referencia().mediana_m;
+    const nivel = this.naPonte()(c);
+    const yw = P.y(nivel);
+    // Na seca a praia da outra margem fica mais larga e a água começa um pouco abaixo do horizonte.
+    const praia = 1.4 + Math.max(0, P.COTA_TIPICA + 6 - nivel) * 0.22;
+    const longe = P.HORIZONTE + praia;
     return {
-      ...b,
-      yAgua: yw,
-      xAgua: b.xMargem(c),
-      agua: `${b.xMargem(c)},${yw} 800,${yw} 800,${BASE} ${b.xLeito},${BASE}`,
-      rotuloAgua: `${fmt(c)} m`,
+      y: yw,
+      longe,
+      praia: { y: P.HORIZONTE - 1.4, h: praia + 1.4 },
+      altura: P.ALTURA - longe,
+      pilares: P.PILARES.map((q) => ({ ...q, h: Math.max(0, yw - q.topo) })),
+      pernas: P.MASTRO.pernas.map((pe) => ({ ...pe, y: P.MASTRO.topoPernas, h: Math.max(0, yw - P.MASTRO.topoPernas) })),
+      // Reflexo de cada pilar, da linha d'água para baixo.
+      reflexos: P.PILARES.map((q) => ({ x: q.x, w: q.w, h: Math.min(110, (yw - q.topo) * 0.9) })),
+      // Reflexos de luz: brilhos soltos (gerados sempre com a mesma semente) e uma claridade difusa por baixo.
+      // Dois conjuntos (a e b) que se alternam para a luz cintilar.
+      led: {
+        a: P.brilhos(P.MEIO, yw + 1, P.ALTURA, 8, 50, 70, 11),
+        b: P.brilhos(P.MEIO, yw + 1, P.ALTURA, 8, 50, 70, 37),
+        halo: { cy: (yw + P.ALTURA) / 2, ry: (P.ALTURA - yw) / 2 },
+      },
+      astro: {
+        a: P.brilhos(P.SOL_X, longe + 1, P.ALTURA, 3, 70, 70, 23),
+        b: P.brilhos(P.SOL_X, longe + 1, P.ALTURA, 3, 70, 70, 57),
+        halo: { cy: (longe + P.ALTURA) / 2, ry: (P.ALTURA - longe) / 2 },
+      },
+      porto: `translate(0 ${longe})`,
+      cota: `${fmt(c)} m`,
+      texto: Math.abs(h) < 0.005 ? 'no nível de um dia típico'
+        : `${fmt(Math.abs(h))} m ${h > 0 ? 'acima' : 'abaixo'} do dia típico`,
+      pct: percentil(this.referencia(), c),
+      nivel,
     };
   });
 
-  /** Painel ampliado: altura da água no corpo da pessoa. */
-  protected readonly painel = computed(() => {
-    const c = this.cota() ?? this.selecao().cota;
-    const h = c - this.referencia().mediana_m;
-    const topo = h > 0 ? Math.max(0, PES_CORPO - h * 100 * ESCALA_CORPO) : null;
-    const texto = h <= 0 ? `↓ água ${fmt(-h)} m abaixo dos pés`
-      : h > ALTURA_PESSOA ? `↑ ${fmt(h - ALTURA_PESSOA)} m de água acima da cabeça`
-      : `água a ${fmt(h)} m de altura no corpo`;
-    return { topo, texto, pct: percentil(this.referencia(), c) };
+  /** Posição (em % da cena) das camadas animadas: ondas ao longe, ondas perto e a linha do barco. */
+  protected readonly camadas = computed(() => {
+    const { y: yw, longe } = this.agua();
+    const pct = (v: number) => (v / P.ALTURA) * 100;
+    return {
+      longe: { top: pct(longe), altura: pct(yw + 24 - longe) },
+      perto: { top: pct(yw - 6), altura: pct(P.ALTURA - yw + 6) },
+      barco: pct(yw + 16),
+    };
+  });
+
+  /** Régua no pilar: só a parte fora d'água aparece; marcas de 1 em 1 m e os marcos ao lado. */
+  protected readonly regua = computed(() => {
+    const ref = this.referencia();
+    const naPonte = this.naPonte();
+    const yw = this.agua().y;
+    const marcas = [];
+    for (let c = Math.ceil(ref.recorde_minimo_m - 1); c <= Math.floor(ref.recorde_maximo_m + 2); c++) {
+      const yy = P.y(naPonte(c));
+      if (yy < yw - 1) marcas.push({ c, y: yy, par: c % 2 === 0 });
+    }
+    const topo = P.y(naPonte(Math.floor(ref.recorde_maximo_m + 2))) - 4;
+    const marcos = this.marcos().map((m) => ({ ...m, y: P.y(naPonte(m.c)), submerso: P.y(naPonte(m.c)) > yw }));
+    return { marcas, topo, altura: Math.max(0, yw - topo), marcos };
+  });
+
+  /** Corte do rio sob a ponte: margens, leito e a água no nível, com a profundidade no canal. */
+  protected readonly corte = computed(() => {
+    const nivel = this.agua().nivel;
+    const naPonte = this.naPonte();
+    // Cotas de -12 a 36 ocupam o quadro de 96 a 6 na vertical.
+    const yc = (c: number) => 96 - ((c + 12) / 48) * 90;
+    const t = yc(34);
+    const fundo = yc(LEITO_CANAL);
+    const meio = (t + fundo) / 2;
+    return {
+      terra: `M0 100V${t}H20Q38 ${t + 6} 50 ${meio}Q64 ${fundo} 80 ${fundo}Q96 ${fundo} 110 ${meio}Q122 ${t + 6} 140 ${t}H160V100Z`,
+      y: yc(nivel),
+      leitoY: yc(LEITO_CANAL),
+      prof: `${fmt(nivel - LEITO_CANAL, 0)} m`,
+      marcos: this.marcos().map((m) => ({ ...m, y: yc(naPonte(m.c)) })),
+    };
   });
 
   protected readonly legenda = computed(() => {
@@ -130,8 +181,10 @@ export class Cena {
     const ref = this.referencia();
     const quando = s.atalho === 'hoje' ? `Hoje (${dataBR(s.data)})` : s.rotulo;
     const desde = ref.aproximada ? ' no período escolhido' : ` desde ${ref.periodo.inicio.slice(0, 4)}`;
-    return `${quando}: a régua marca ${fmt(s.cota)} m. Em pé onde a água chega num dia típico ` +
-      `(${fmt(ref.mediana_m)} m), ${frasePessoa(ref, s.cota)}. Esse nível é ` +
+    const h = s.cota - ref.mediana_m;
+    const relacao = Math.abs(h) < 0.005 ? 'no nível de um dia típico'
+      : `${fmt(Math.abs(h))} m ${h > 0 ? 'acima' : 'abaixo'} de um dia típico (${fmt(ref.mediana_m)} m)`;
+    return `${quando}: a régua marca ${fmt(s.cota)} m, ${relacao}. Esse nível é ` +
       `${frasePercentil(percentil(ref, s.cota))}${desde}.`;
   });
 

@@ -1,26 +1,49 @@
 :host { display: block; }
-h2 { margin: 0; font-size: 16px; }
-.sub { margin: 2px 0 12px; color: var(--texto-2); font-size: 13px; }
+.cabeca { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 4px 24px; }
+.legenda {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; margin: 2px 0 16px; padding: 0;
+  font-size: 12.5px; color: var(--texto-2);
+}
+.legenda li { display: inline-flex; align-items: center; gap: 7px; }
+.legenda i { display: inline-block; flex: none; }
+.amostra-linha { width: 18px; height: 3px; border-radius: 3px; background: var(--serie); }
+.amostra-faixa { width: 14px; height: 12px; border-radius: 3px; background: linear-gradient(180deg, color-mix(in srgb, var(--serie) 40%, transparent), color-mix(in srgb, var(--serie) 8%, transparent)); }
+.amostra-mediana { width: 18px; height: 0; border-top: 2px dashed var(--mudo); }
+
 .caixa { position: relative; }
 svg { display: block; width: 100%; overflow: visible; cursor: crosshair; }
-svg:focus-visible { outline: 2px solid var(--serie); outline-offset: 4px; border-radius: 4px; }
+svg:focus-visible { outline: 2px solid var(--serie); outline-offset: 6px; border-radius: 8px; }
 
-.grade { stroke: var(--grade); stroke-width: 1; }
-.grade.base { stroke: var(--eixo); }
-.mediana { stroke: var(--mudo); stroke-width: 1; stroke-dasharray: 4 4; }
-.faixa { fill: var(--serie); fill-opacity: 0.18; }
-.linha { fill: none; stroke: var(--serie); stroke-width: 2; stroke-linejoin: round; }
-.sel { stroke: var(--selecao); stroke-width: 1.5; }
-.sel-ponto { fill: var(--selecao); stroke: var(--superficie); stroke-width: 2; }
-.mira { stroke: var(--texto-2); stroke-width: 1; pointer-events: none; }
-.ponto { fill: var(--serie); stroke: var(--superficie); stroke-width: 2; pointer-events: none; }
+.grade { stroke: var(--grade); stroke-width: 1; stroke-dasharray: 2 4; }
+.grade.base { stroke: var(--eixo); stroke-dasharray: none; }
+.mediana { stroke: var(--mudo); stroke-width: 1.25; stroke-dasharray: 5 5; }
+.faixa-topo { stop-color: var(--serie); stop-opacity: .30; }
+.faixa-fundo { stop-color: var(--serie); stop-opacity: .05; }
+.faixa { fill: url(#g-faixa); }
+.linha {
+  fill: none; stroke: var(--serie); stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round;
+  filter: drop-shadow(0 3px 6px color-mix(in srgb, var(--serie) 45%, transparent));
+}
+.sel { stroke: var(--selecao); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.sel-ponto { fill: var(--selecao); stroke: var(--superficie); stroke-width: 2.5; }
+.sel-pulso {
+  fill: var(--selecao); opacity: .35; transform-box: fill-box; transform-origin: center;
+  animation: pulso 2s ease-out infinite;
+}
+@keyframes pulso { from { transform: scale(1); opacity: .45; } to { transform: scale(3.2); opacity: 0; } }
+.mira { stroke: var(--texto-2); stroke-width: 1; stroke-opacity: .5; pointer-events: none; }
+.ponto { fill: var(--serie); stroke: var(--superficie); stroke-width: 2.5; pointer-events: none; }
 
 .dica {
-  position: absolute; pointer-events: none; transform: translateX(12px);
-  background: var(--superficie); color: var(--texto);
-  border: 1px solid var(--borda); border-radius: 8px; padding: 8px 10px; font-size: 13px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .12); white-space: nowrap;
+  position: absolute; pointer-events: none; transform: translateX(14px);
+  background: color-mix(in srgb, var(--superficie) 86%, transparent); color: var(--texto);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--borda); border-radius: 12px; padding: 10px 14px; font-size: 13px;
+  box-shadow: var(--sombra-3); white-space: nowrap;
+  animation: aparecer .15s ease-out;
 }
-.dica.esquerda { transform: translateX(calc(-100% - 12px)); }
-.dica strong { display: block; font-size: 15px; }
-.dica span { color: var(--texto-2); }
+.dica.esquerda { transform: translateX(calc(-100% - 14px)); }
+.dica strong { display: block; font: 700 19px/1.2 var(--fonte-titulo); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.dica div { font-weight: 500; }
+.dica span { color: var(--texto-2); font-size: 12px; }
+@keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }

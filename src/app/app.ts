@@ -1,16 +1,17 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Cena } from './cena/cena';
 import { Grafico } from './grafico/grafico';
-import { MESES, atalhos, fmt, refDoPeriodo, selecaoDoDia } from './nivel';
+import { MESES, atalhos, dataBR, fmt, fmtSinal, percentil, refDoPeriodo, selecaoDoDia } from './nivel';
 import { Estacao, Referencia, Selecao, Serie } from './rios.models';
 import { RiosService } from './rios.service';
 import { Resumo } from './resumo/resumo';
+import { Selo } from './selo/selo';
 
 @Component({
   selector: 'app-root',
-  imports: [Resumo, Grafico, Cena],
+  imports: [Resumo, Grafico, Cena, Selo],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -28,6 +29,26 @@ export class App {
   protected readonly selecao = signal<Selecao | null>(null);
   protected readonly carregando = signal(false);
   protected readonly aviso = signal('');
+  protected readonly avisoErro = signal(false);
+  protected readonly tema = signal<'light' | 'dark'>(temaInicial());
+
+  protected readonly fmt = fmt;
+  protected readonly dataBR = dataBR;
+
+  /** Percentil do nível de hoje, para o selo do topo. */
+  protected readonly pctAtual = computed(() => {
+    const d = this.dados();
+    const ref = this.referencia();
+    return d && ref ? percentil(ref, d.atual_m) : null;
+  });
+
+  protected readonly tendencia = computed(() => {
+    const d = this.dados();
+    if (!d) return null;
+    const v = d.variacao_15d_m;
+    if (d.tendencia_15d === 'estável') return { icone: '→', texto: 'estável em 15 dias', tom: 'estavel' };
+    return { icone: v > 0 ? '↗' : '↘', texto: `${fmtSinal(v)} m em 15 dias`, tom: v > 0 ? 'sobe' : 'desce' };
+  });
 
   protected readonly tabela = computed(() =>
     (this.dados()?.resumo_mensal ?? []).map((r) => {
@@ -44,10 +65,19 @@ export class App {
   });
 
   constructor() {
+    effect(() => {
+      const t = this.tema();
+      document.documentElement.dataset['theme'] = t;
+      try { localStorage.setItem('tema', t); } catch { /* sem armazenamento: só não lembra */ }
+    });
     firstValueFrom(this.api.estacoes())
       .then((e) => this.estacoes.set(e))
       .catch(() => { /* carregar() mostra o erro */ });
     this.carregar();
+  }
+
+  protected alternarTema() {
+    this.tema.update((t) => (t === 'dark' ? 'light' : 'dark'));
   }
 
   protected mudarEstacao(ev: Event) {
@@ -69,7 +99,8 @@ export class App {
     const estacao = this.estacao();
     const anos = this.anos();
     this.carregando.set(true);
-    this.aviso.set(this.dados() ? '' : 'Carregando dados da ANA…');
+    this.avisoErro.set(false);
+    this.aviso.set('');
     history.replaceState(null, '', `?estacao=${encodeURIComponent(estacao)}&anos=${anos}`);
     try {
       const [dados, ref] = await Promise.all([
@@ -93,6 +124,7 @@ export class App {
       this.aviso.set(avisos.join(' '));
     } catch (erro) {
       if (n !== this.pedido) return;
+      this.avisoErro.set(true);
       const http = erro instanceof HttpErrorResponse ? erro : null;
       this.aviso.set(
         http?.status === 0 || (http && http.status >= 502 && http.status <= 504 && !http.error?.detail)
@@ -103,4 +135,10 @@ export class App {
       if (n === this.pedido) this.carregando.set(false);
     }
   }
+}
+
+function temaInicial(): 'light' | 'dark' {
+  const salvo = document.documentElement.dataset['theme'];
+  if (salvo === 'light' || salvo === 'dark') return salvo;
+  return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }

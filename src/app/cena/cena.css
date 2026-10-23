@@ -1,43 +1,240 @@
 :host { display: block; }
-h2 { margin: 0; font-size: 16px; }
-.sub { margin: 2px 0 12px; color: var(--texto-2); font-size: 13px; }
 
-.atalhos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.atalhos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .atalhos button {
-  font: inherit; font-size: 13px; cursor: pointer; color: var(--texto); background: var(--superficie);
-  border: 1px solid var(--borda); border-radius: 999px; padding: 5px 12px;
+  font: 500 13px var(--fonte); cursor: pointer; color: var(--texto); background: var(--superficie-2);
+  border: 1px solid var(--borda); border-radius: 999px; padding: 7px 14px;
+  transition: transform .2s var(--suave), border-color .2s, background-color .2s, box-shadow .2s, color .2s;
 }
-.atalhos button:hover { border-color: var(--texto-2); }
-.atalhos button[aria-pressed="true"] { border-color: var(--selecao); box-shadow: inset 0 0 0 1px var(--selecao); }
+.atalhos button:hover { border-color: var(--texto-2); transform: translateY(-1px); box-shadow: var(--sombra-1); }
+.atalhos button[aria-pressed="true"] {
+  background: var(--selecao); border-color: var(--selecao); color: #fff; font-weight: 600;
+  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--selecao) 70%, transparent);
+}
 
-.grade { display: grid; grid-template-columns: 1fr 200px; gap: 16px; align-items: start; }
-.grade > * { min-width: 0; }
-.cena { display: block; width: 100%; height: auto; border-radius: 8px; }
-.painel { text-align: center; }
-.corpo { width: 140px; height: 230px; }
-.painel-texto { font-size: 13px; color: var(--texto-2); margin: 6px 0 0; }
+.palco { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--borda); }
+.cena { display: block; width: 100%; height: auto; }
+.hud {
+  position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  padding: 10px 14px; border-radius: 12px; max-width: 220px; pointer-events: none;
+  background: color-mix(in srgb, var(--superficie) 82%, transparent); backdrop-filter: blur(6px);
+  border: 1px solid var(--borda); box-shadow: var(--sombra-1);
+}
+.hud-rotulo { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mudo); }
+.hud-cota { font: 700 22px/1.1 var(--fonte-titulo); font-variant-numeric: tabular-nums; }
+.hud-texto { font-size: 13px; color: var(--texto-2); font-weight: 500; margin-top: 4px; }
+.local {
+  position: absolute; right: 12px; bottom: 10px; font-size: 11px; font-weight: 600; color: #fff; pointer-events: none;
+  padding: 3px 9px; border-radius: 999px; background: rgba(0, 0, 0, .35);
+}
 
-.ceu { fill: var(--superficie); }
-.terra { fill: var(--terra); stroke: var(--terra-borda); stroke-width: 1.5; }
-.referencia { stroke: var(--texto-2); stroke-width: 1; stroke-dasharray: 3 4; opacity: .7; }
-.ref-texto { fill: var(--texto-2); }
-.pessoa { fill: var(--pessoa); }
-.agua-topo { stop-color: var(--agua-topo); stop-opacity: .75; }
-.agua-fundo { stop-color: var(--agua); stop-opacity: .92; }
+/* Ilustração: as cores vêm dos tokens --cena-* (dia no tema claro, noite no escuro). */
+.ceu { fill: url(#g-ceu); }
+.ceu-topo { stop-color: var(--cena-ceu-topo); }
+.ceu-horizonte { stop-color: var(--cena-ceu-horizonte); }
+.astro { fill: var(--cena-astro); }
+.astro-halo { fill: var(--cena-astro); opacity: .22; }
+.nuvem { fill: var(--cena-nuvem); opacity: var(--cena-nuvem-opacidade); filter: blur(1.5px); }
+
+/* Outra margem, longe e um pouco apagada pela névoa. */
+.mata { fill: var(--cena-mata); }
+.barranco-terra { fill: var(--cena-barro); }
+.erosao { fill: none; stroke: var(--cena-leito); stroke-width: .6; opacity: .3; }
+.praia { fill: var(--cena-areia); }
+.chamine { fill: var(--cena-chamine); }
+.casa-branca { fill: var(--cena-casa); }
+.casa-azul { fill: #9fbcd4; }
+.casa-vermelha { fill: #b9483b; }
+.casa-amarela { fill: #d9b25e; }
+.casa-azul, .casa-vermelha, .casa-amarela { opacity: var(--cena-casa-cor); }
+.luzes { fill: #ffd27a; opacity: var(--cena-luzes); }
+.balsa { fill: #3a3f47; }
+.carga { fill: #c4532f; opacity: var(--cena-casa-cor); }
+.lancha { fill: #f3f3ef; }
+.rastro { fill: none; stroke: #fff; stroke-width: .8; opacity: .6; }
+
+/* Ponte. */
+.concreto-luz { stop-color: var(--cena-ponte); }
+.concreto-sombra { stop-color: var(--cena-ponte-sombra); }
+.pilar { fill: url(#g-concreto); }
+.tabuleiro { fill: var(--cena-ponte); stroke: var(--cena-ponte-sombra); stroke-width: 1; stroke-linejoin: round; }
+.guarda { fill: none; stroke: var(--cena-ponte-sombra); stroke-width: 1; }
+.espuma { fill: var(--cena-espuma); }
+.lampadas { fill: #fff3c4; opacity: var(--cena-luzes); }
+
+/* Mastro e estais na cena parada; à noite o LED fica numa camada à parte (.led). */
+.mastro { fill: var(--cena-mastro); }
+.mastro-fenda { fill: var(--cena-ponte-sombra); opacity: .55; }
+.estais { fill: none; stroke: var(--cena-estai); stroke-width: .8; }
+
+/* Água: azul-marinho do Rio Negro, clareando no horizonte, com cristas e cavados que se deformam devagar. */
 .agua { fill: url(#g-agua); }
-.agua-corpo { fill: var(--agua); fill-opacity: .65; }
-.superficie-agua { stroke: var(--agua-topo); stroke-width: 2; }
-.leito { fill: #fff; font-size: 12px; opacity: .9; }
-.regua { fill: var(--superficie); stroke: var(--texto-2); stroke-width: 1; }
-.tique { stroke: var(--texto); stroke-width: 1; }
-.nivel { font-size: 13px; font-weight: 650; fill: var(--texto); }
+.agua-horizonte { stop-color: var(--cena-agua-horizonte); }
+.agua-raso { stop-color: var(--cena-rio-raso); }
+.agua-fundo { stop-color: var(--cena-rio-fundo); }
+.crista { flood-color: var(--cena-crista); }
+.cavado { flood-color: var(--cena-cavado); }
 
-.deslizador { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
-.deslizador input { flex: 1; min-width: 0; accent-color: var(--selecao); }
-.deslizador output { font-size: 13px; color: var(--texto-2); min-width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
-.legenda { font-size: 15px; margin: 12px 0 0; min-height: 3em; }
-.nota { color: var(--texto-2); font-size: 13px; margin: 10px 0 0; }
+/* Luz na água. */
+.reflexo-astro { opacity: var(--cena-brilho-sol); }
+.halo-astro { fill: url(#g-halo-astro); filter: blur(6px); }
+.halo-astro-centro { stop-color: var(--cena-astro); stop-opacity: .35; }
+.nucleo-astro { fill: url(#g-halo-astro); filter: blur(4px); }
+.halo-astro-borda { stop-color: var(--cena-astro); stop-opacity: 0; }
+.reflexo-pilares { fill: url(#g-reflexo-pilar); }
+.refl-topo { stop-color: var(--cena-ponte); stop-opacity: .5; }
+.refl-fundo { stop-color: var(--cena-ponte); stop-opacity: 0; }
+.luzes-reflexo { fill: #ffd27a; opacity: calc(var(--cena-luzes) * .5); }
+/*
+ * Camadas animadas por cima da cena. Só usam transform, opacity e filter, que a placa de vídeo anima sem
+ * redesenhar a cena: as ondas deslizam, os brilhos se alternam e o LED muda de tom.
+ */
+.ondas {
+  position: absolute; left: 0; right: 0; overflow: hidden; pointer-events: none; opacity: var(--cena-ondulacao);
+  -webkit-mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent);
+}
+.ondas-perto { -webkit-mask-image: linear-gradient(transparent, #000 12%); mask-image: linear-gradient(transparent, #000 12%); }
+.textura { position: absolute; top: 0; bottom: 0; left: 0; background-repeat: repeat; will-change: transform; }
+.ondas-longe .textura { width: calc(100% + 300px); background-size: 300px 22px; animation: deriva-longe 16s linear infinite; }
+.ondas-perto .textura { width: calc(100% + 900px); background-size: 900px 150px; animation: deriva-perto 22s linear infinite; }
+@keyframes deriva-longe { to { transform: translateX(-300px); } }
+@keyframes deriva-perto { to { transform: translateX(-900px); } }
+
+.camada { position: absolute; top: 0; height: 100%; pointer-events: none; }
+.astro-brilhos { left: 58%; width: 24%; fill: var(--cena-astro); opacity: var(--cena-brilho-sol); }
+.led-estrutura { left: 30%; width: 40%; }
+.led-agua, .led-brilhos { left: 42%; width: 16%; }
+.brilhos { will-change: opacity; }
+.brilhos-a { animation: cintila-a 2.4s ease-in-out infinite; }
+.brilhos-b { animation: cintila-b 2.4s ease-in-out infinite; }
+@keyframes cintila-a { 0%, 100% { opacity: var(--o, 1); } 50% { opacity: calc(var(--o, 1) * .2); } }
+@keyframes cintila-b { 0%, 100% { opacity: calc(var(--o, 1) * .2); } 50% { opacity: var(--o, 1); } }
+.astro-brilhos { --o: var(--cena-brilho-sol); }
+
+/* LED da ponte (só à noite): mastro rosa e estais dourados; a camada inteira vai girando o tom. */
+.led { position: absolute; inset: 0; pointer-events: none; display: var(--cena-led); will-change: filter; animation: led-tom 18s linear infinite; }
+@keyframes led-tom { to { filter: hue-rotate(360deg); } }
+.led-mastro { fill: #ff3fb4; }
+.led-estais { fill: none; stroke: #ffb347; stroke-width: .9; }
+.led-brilho .led-estais { stroke-width: 2.2; opacity: .6; }
+.led-brilho .led-mastro { opacity: .8; }
+.led-brilhos { fill: #ff3fb4; }
+.led-halo { fill: url(#g-led-halo); filter: blur(8px); }
+.led-nucleo { fill: url(#g-led-halo); filter: blur(5px); }
+.led-halo-centro { stop-color: #ff3fb4; stop-opacity: .45; }
+.led-halo-borda { stop-color: #ff3fb4; stop-opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .textura, .brilhos-a, .brilhos-b, .led { animation: none; }
+}
+
+/* Barco de recreio: branco, casco e frisos vermelhos, lona azul, pneus no costado e botes vermelhos. */
+.b-branco { fill: #f7f6f2; stroke: #c8c3b8; stroke-width: .4; }
+.b-vermelho, .b-vigia { fill: #c9302c; }
+.b-friso { fill: none; stroke: #c9302c; stroke-width: 1; }
+.b-interior { fill: var(--cena-interior); }
+.b-grade { fill: none; stroke: #fbfaf7; stroke-width: .9; }
+.b-lona { fill: #2f6db5; }
+.b-bote { fill: #e2452f; stroke: #a52a1c; stroke-width: .4; }
+.b-mastro { fill: none; stroke: #f7f6f2; stroke-width: 1.2; }
+.b-antena { fill: #dfe3e7; stroke: #cfd3d8; stroke-width: .8; }
+.b-corda { fill: none; stroke: #6b7a8c; stroke-width: .5; }
+.b-pneu { fill: #3b3b3b; stroke: #e9e9e9; stroke-width: 1; }
+.b-pneu-furo { fill: #f7f6f2; }
+.b-esteira { fill: none; stroke: #fff; stroke-width: 1.2; stroke-linecap: round; opacity: .6; }
+
+/* O barco cruza o rio da direita para a esquerda (proa à frente) e balança de leve nas ondas. */
+.barco-linha { position: absolute; left: 0; right: 0; height: 0; pointer-events: none; }
+.barco-viagem {
+  position: absolute; left: 0; bottom: 0; width: 10.9%; will-change: transform;
+  transform: translateX(370%); animation: viagem 48s linear -26s infinite;
+}
+.barco-balanco { transform-origin: 50% 94.7%; animation: balanco 3.2s ease-in-out infinite; will-change: transform; }
+.barco-balanco svg { display: block; width: 100%; height: auto; margin-bottom: -3.6%; }
+@keyframes viagem { from { transform: translateX(921%); } to { transform: translateX(-105%); } }
+@keyframes balanco {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30% { transform: translateY(-4%) rotate(-.7deg); }
+  70% { transform: translateY(2%) rotate(.6deg); }
+}
+@media (prefers-reduced-motion: reduce) { .barco-viagem, .barco-balanco { animation: none; } }
+
+/* Régua no pilar e os marcos (cheia recorde, dia típico, seca recorde). */
+.regua { fill: #fff; stroke: var(--cena-ponte-sombra); stroke-width: 1; }
+.tique { stroke: #1d2633; stroke-width: 1; }
+.nivel { font: 700 14px var(--fonte-titulo); fill: var(--texto); }
+.marco line { stroke-width: 2; }
+.marco text { font: 600 10px var(--fonte); }
+.marco-cheia line { stroke: #e0613a; } .marco-cheia text { fill: #e0613a; }
+.marco-tipico line { stroke: #2fa36b; } .marco-tipico text { fill: #2fa36b; }
+.marco-seca line { stroke: #d9a21b; } .marco-seca text { fill: #d9a21b; }
+
+/* Corte do rio: quadro no canto com o fundo e a profundidade no canal. */
+.corte {
+  position: absolute; right: 12px; top: 12px; margin: 0; width: 176px; padding: 8px 10px 10px;
+  border-radius: 12px; pointer-events: none;
+  background: color-mix(in srgb, var(--superficie) 86%, transparent); backdrop-filter: blur(6px);
+  border: 1px solid var(--borda); box-shadow: var(--sombra-1);
+}
+.corte figcaption { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--mudo); }
+.corte svg { display: block; width: 100%; height: auto; margin: 4px 0 2px; border-radius: 6px; background: var(--cena-ceu-horizonte); }
+.corte-agua { fill: url(#g-corte-agua); }
+.corte-terra { fill: var(--cena-leito); }
+.corte-superficie { stroke: var(--cena-ceu-horizonte); stroke-width: 1; }
+.corte-marco { stroke-width: 1; stroke-dasharray: 3 2; opacity: .8; }
+.corte-marco.marco-cheia { stroke: #e0613a; }
+.corte-marco.marco-tipico { stroke: #2fa36b; }
+.corte-marco.marco-seca { stroke: #d9a21b; }
+.corte-seta, .corte-ponta { fill: none; stroke: #fff; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.corte-prof { display: block; font: 700 18px/1.1 var(--fonte-titulo); font-variant-numeric: tabular-nums; }
+.corte-prof span { font: 500 11px var(--fonte); color: var(--texto-2); }
+
+.deslizador {
+  display: flex; gap: 14px; align-items: center; margin-top: 16px;
+  padding: 10px 14px; border-radius: 14px; background: var(--superficie-2); border: 1px solid var(--borda);
+}
+.deslizador-rotulo {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mudo); white-space: nowrap;
+}
+.deslizador input { flex: 1; min-width: 0; appearance: none; -webkit-appearance: none; background: transparent; height: 22px; cursor: pointer; }
+.deslizador input::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 6px; background: linear-gradient(90deg, var(--agua-topo), var(--agua));
+}
+.deslizador input::-moz-range-track {
+  height: 6px; border-radius: 6px; background: linear-gradient(90deg, var(--agua-topo), var(--agua));
+}
+.deslizador input::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 20px; height: 20px; margin-top: -7px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--selecao); box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+  transition: transform .15s;
+}
+.deslizador input::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--selecao); box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+.deslizador input:active::-webkit-slider-thumb { transform: scale(1.15); }
+.deslizador output {
+  font-size: 13px; font-weight: 600; color: var(--texto); min-width: 104px; text-align: center;
+  font-variant-numeric: tabular-nums; padding: 4px 10px; border-radius: 999px;
+  background: var(--superficie); border: 1px solid var(--borda);
+}
+
+.legenda {
+  font-size: 16px; line-height: 1.55; margin: 16px 0 0; min-height: 3em;
+  padding: 4px 0 4px 16px; border-left: 3px solid var(--agua);
+}
+.nota {
+  display: flex; gap: 10px; align-items: flex-start;
+  color: var(--texto-2); font-size: 13px; margin: 16px 0 0; padding: 12px 14px;
+  background: var(--superficie-2); border-radius: 12px;
+}
+.nota svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--serie); stroke-width: 2; stroke-linecap: round; margin-top: 1px; }
 
 @media (max-width: 720px) {
-  .grade { grid-template-columns: 1fr; }
+  .hud { max-width: 170px; padding: 8px 10px; }
+  .corte { position: static; width: auto; margin: 0; border-radius: 0; border: 0; border-top: 1px solid var(--borda); }
+  .corte svg { max-width: 220px; }
+  .hud-cota { font-size: 18px; }
+  .deslizador-rotulo { display: none; }
 }
